@@ -3,7 +3,7 @@ import { useState } from "react";
 import styles from "./index.module.css";
 
 export default function Home() {
-  const [animalInput, setAnimalInput] = useState("");
+  const [storyPrompt, setStoryPrompt] = useState("");
   const [result, setResult] = useState();
 
   async function onSubmit(event) {
@@ -14,16 +14,16 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ animal: animalInput }),
+        body: JSON.stringify({ storyPrompt: storyPrompt }),
       });
 
       const data = await response.json();
       if (response.status !== 200) {
         throw data.error || new Error(`Request failed with status ${response.status}`);
       }
-
+      console.error(data)
       setResult(data.result);
-      setAnimalInput("");
+      setStoryPrompt("");
     } catch(error) {
       // Consider implementing your own error handling logic here
       console.error(error);
@@ -46,8 +46,8 @@ export default function Home() {
             type="text"
             name="animal"
             placeholder="Enter a story prompt"
-            value={animalInput}
-            onChange={(e) => setAnimalInput(e.target.value)}
+            value={storyPrompt}
+            onChange={(e) => setStoryPrompt(e.target.value)}
           />
           <input type="submit" value="Generate Story" />
         </form>

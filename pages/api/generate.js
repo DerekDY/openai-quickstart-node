@@ -1,7 +1,7 @@
 import { Configuration, OpenAIApi } from "openai";
 
 const configuration = new Configuration({
-  apiKey: "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",
+  apiKey: process.env.OPENAI_API_KEY
 });
 const openai = new OpenAIApi(configuration);
 
@@ -15,11 +15,11 @@ export default async function (req, res) {
     return;
   }
 
-  const animal = req.body.animal || '';
-  if (animal.trim().length === 0) {
+  const storyPrompt = req.body.storyPrompt || '';
+  if (storyPrompt.trim().length === 0) {
     res.status(400).json({
       error: {
-        message: "Please enter a valid animal",
+        message: "Please enter a valid story prompt",
       }
     });
     return;
@@ -28,7 +28,7 @@ export default async function (req, res) {
   try {
     const completion = await openai.createCompletion({
       model: "text-davinci-003",
-      prompt: generatePrompt(animal),
+      prompt: generatePrompt(storyPrompt),
       temperature: 0.6,
     });
     res.status(200).json({ result: completion.data.choices[0].text });
@@ -48,15 +48,7 @@ export default async function (req, res) {
   }
 }
 
-function generatePrompt(animal) {
-  const capitalizedAnimal =
-    animal[0].toUpperCase() + animal.slice(1).toLowerCase();
-  return `Suggest three names for an animal that is a superhero.
-
-Animal: Cat
-Names: Captain Sharpclaw, Agent Fluffball, The Incredible Feline
-Animal: Dog
-Names: Ruff the Protector, Wonder Canine, Sir Barks-a-Lot
-Animal: ${capitalizedAnimal}
-Names:`;
+function generatePrompt(story) {
+  return "You are the worlds best kid's book author."+"You write creatively to spark imagination in Kids. You will take in a story prompt and generate the following output:"+
+"A story in JSON format. The JSON should include: the story name, synopsis of the story, a base AI prompt for generating the book artwork which should include the feeling/theme of the book, An AI image prompt for the cover artwork, then a collection of pages, each page including the page text and an AI image prompt for the page that will be appended onto the base image prompt - it should clearly describe the theme of the page. Here is the story prompt:"+story;
 }
