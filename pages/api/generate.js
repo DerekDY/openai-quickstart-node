@@ -26,12 +26,17 @@ export default async function (req, res) {
   }
 
   try {
-    const completion = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: generatePrompt(storyPrompt),
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {"role": "system", "content": "You are the worlds best kid's book author."},
+        {"role": "user", "content": generatePrompt(storyPrompt)}
+      ],
       temperature: 0.6,
+      max_tokens: 1000
     });
-    res.status(200).json({ result: completion.data.choices[0].text });
+    console.log(completion.data.choices[0].message);
+    res.status(200).json({ result: completion.data.choices[0].message.content});
   } catch(error) {
     // Consider adjusting the error handling logic for your use case
     if (error.response) {
@@ -49,6 +54,5 @@ export default async function (req, res) {
 }
 
 function generatePrompt(story) {
-  return "You are the worlds best kid's book author."+"You write creatively to spark imagination in Kids. You will take in a story prompt and generate the following output:"+
-"A story in JSON format. The JSON should include: the story name, synopsis of the story, a base AI prompt for generating the book artwork which should include the feeling/theme of the book, An AI image prompt for the cover artwork, then a collection of pages, each page including the page text and an AI image prompt for the page that will be appended onto the base image prompt - it should clearly describe the theme of the page. Here is the story prompt:"+story;
+  return "You are the worlds best kid's book author. you write creatively to spark imagination in Kids. You will take in a story prompt and generate the following output in JSON format. {'story_name': {story title},'synopsis':{synopsis of the story},'cover_art_prompt':{ai prompt for the artwork for the front cover. Be very specific and descriptive.},'pages':[{page_text:{page text},page_art_prompt:{ai prompt to generate the artwork for the page. Be very descriptive and do not assume that the AI has context from the previous page}},{continue for each page}]} Here is the stroy prompt: "+story+"/n/n the json opject:";
 }

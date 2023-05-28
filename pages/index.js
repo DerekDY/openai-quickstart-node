@@ -21,8 +21,10 @@ export default function Home() {
       if (response.status !== 200) {
         throw data.error || new Error(`Request failed with status ${response.status}`);
       }
-      console.error(data)
-      setResult(data.result);
+      console.error(data.result);
+      const story = JSON.parse(data.result);
+      console.error(story.story_name);
+      setResult(story.story_name);
       setStoryPrompt("");
     } catch(error) {
       // Consider implementing your own error handling logic here
