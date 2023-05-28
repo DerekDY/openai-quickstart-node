@@ -5,6 +5,7 @@ import styles from "./index.module.css";
 export default function Home() {
   const [storyPrompt, setStoryPrompt] = useState("");
   const [result, setResult] = useState();
+  const [story, setStory] = useState();
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -25,6 +26,7 @@ export default function Home() {
       const story = JSON.parse(data.result);
       console.error(story.story_name);
       setResult(story.story_name);
+      setStory(story);
       setStoryPrompt("");
     } catch(error) {
       // Consider implementing your own error handling logic here
@@ -54,6 +56,11 @@ export default function Home() {
           <input type="submit" value="Generate Story" />
         </form>
         <div className={styles.result}>{result}</div>
+        <ul>
+          {story && story.pages.map((value,index)=>
+            <li><div></div><div>{value.page_text}</div></li>)
+        }
+        </ul>
       </main>
     </div>
   );
