@@ -1,44 +1,127 @@
 import Head from "next/head";
 import { useState } from "react";
+import { Navigation, Pagination, Scrollbar, A11y } from 'swiper';
+import { Swiper, SwiperSlide } from 'swiper/react';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/scrollbar';
 import styles from "./index.module.css";
 
 export default function Home() {
   const [storyPrompt, setStoryPrompt] = useState("");
   const [result, setResult] = useState();
   const [story, setStory] = useState();
+  const [loadingMessage, setLoadingMessage] = useState();
+  const loadingURL= "https://openai-labs-public-images-prod.azureedge.net/user-xgOH8FUugNBrOHlG6898OQEe/generations/generation-Aay0x7H5jn4OtSTZ7kSHGbhn/image.png"
 
   async function onSubmit(event) {
+    setLoadingMessage("Just a second! Getting Creative!");
     event.preventDefault();
     try {
-      const response = await fetch("/api/generate", {
+      
+      
+      //const response = await fetch("/api/generate", {
+      //  method: "POST",
+      //  headers: {
+      //    "Content-Type": "application/json",
+      //  },
+      //  body: JSON.stringify({ storyPrompt: storyPrompt }),
+      //});
+
+      //const data = await response.json();
+      //if (response.status !== 200) {
+      //  throw data.error || new Error(`Request failed with status ${response.status}`);
+      //}
+      //console.error(data.result);
+      const story = {
+        story_name: "The Test",
+        cover_art_prompt: "A young girl with curly...",
+        pages: [
+          {
+            page_text: "Lily sat nervously at her desk, staring at the blank test in front of her",
+            page_art_prompt: "Lily sitting at her dest with a wordied.."
+          },
+          {
+            page_text: "taking a deep breath she passed the test!",
+            page_art_prompt: "Lily sitting at her dest with a wordied.."
+          }
+        ]
+      }
+      //const story = await JSON.parse(data.result);
+      console.error(story); 
+      console.error(story.story_name);
+      var cover_prompt=story.cover_art_prompt;
+      var style=story.illustration_style;
+      console.error(cover_prompt);
+      setResult(story.story_name);
+      setStory(story);
+      setStoryPrompt("");
+      
+      //var style="storybook";
+      console.error("Getting Cover Art!")
+      var image = "https://oaidalleapiprodscus.blob.core.windows.net/private/org-MUVFDrasI9rc9YyVWj0irnzo/user-xgOH8FUugNBrOHlG6898OQEe/img-67gUTkVnJDZxTmstgLk8Lu5J.png?st=2023-05-30T11%3A52%3A51Z&se=2023-05-30T13%3A52%3A51Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2023-05-30T07%3A37%3A37Z&ske=2023-05-31T07%3A37%3A37Z&sks=b&skv=2021-08-06&sig=TODJnUcRBE4aEPZgBM7iOy8CXBLLjiD0CqCeAHvX1uM%3D";
+      //var coverURL = await requestImage(cover_prompt + "Illustration Style: "+style);
+      var coverURL = image;
+      console.error(story.cover_art_prompt+"Illustration Style: "+style);
+      story.cover_url = coverURL;
+      setStory(story);
+      setLoadingMessage(null);
+     
+      if (story && story.pages) {
+        for (let i = 0; i < story.pages.length; i++) {
+          const currentPage = story.pages[i];
+          console.error(currentPage.page_art_prompt+"Illustration Style: "+style);
+          //const image= await requestImage(currentPage.page_art_prompt+"Illustration Style: "+style)
+          // Do something with currentPage
+          story.pages[i].page_url = image;
+          setStory(story);
+        }
+      } 
+      setLoadingMessage("");
+      setLoadingMessage(null);
+      console.error(story); 
+      
+    } catch(error) {
+      // Consider implementing your own error handling logic here
+      console.error(error);
+      alert(error.message);
+    }
+    //console.error(story.illustration_style);
+    
+  }
+  
+  async function requestImage(prompt){
+    console.error("in the request function");
+    try {
+      const response = await fetch("/api/illustrations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ storyPrompt: storyPrompt }),
+        body: JSON.stringify({ imagePrompt: prompt }),
       });
-
+      
       const data = await response.json();
       if (response.status !== 200) {
         throw data.error || new Error(`Request failed with status ${response.status}`);
       }
       console.error(data.result);
-      const story = JSON.parse(data.result);
-      console.error(story.story_name);
-      setResult(story.story_name);
-      setStory(story);
-      setStoryPrompt("");
-    } catch(error) {
+      return data.result;
+    }catch(error) {
       // Consider implementing your own error handling logic here
       console.error(error);
       alert(error.message);
+      return "";
     }
   }
 
   return (
     <div>
       <Head>
-        <title>OpenAI Quickstart</title>
+        <title>Wonder Pages</title>
         <link rel="icon" href="/dog.png" />
       </Head>
 
@@ -55,12 +138,25 @@ export default function Home() {
           />
           <input type="submit" value="Generate Story" />
         </form>
-        <div className={styles.result}>{result}</div>
-        <ul>
-          {story && story.pages.map((value,index)=>
-            <li><div></div><div>{value.page_text}</div></li>)
-        }
-        </ul>
+        {!!loadingMessage && (<img src="https://openai-labs-public-images-prod.azureedge.net/user-xgOH8FUugNBrOHlG6898OQEe/generations/generation-Aay0x7H5jn4OtSTZ7kSHGbhn/image.png" style={{ width: '100%' }}></img>)}
+		
+		<swiper
+			modules={[Navigation, Pagination, Scrollbar, A11y]}
+			navigation
+		>
+			<SwiperSlide>
+				<div>
+					{story && story.cover_url && (<img src={story.cover_url} style={{ width: '100%' }}></img>)}
+				</div>
+        		<div className={styles.result}>{result}</div>
+			</SwiperSlide>
+        {story && story.pages.map((value,index)=>
+        	<SwiperSlide>
+				<div>{value.page_url && (<img src={value.page_url} style={{ width: '100%' }}></img>)}</div>
+				<div>{value.page_text}</div>
+			</SwiperSlide>
+        )}
+		</swiper>
       </main>
     </div>
   );
