@@ -1,45 +1,35 @@
 import Head from "next/head";
 import { useState } from "react";
-import { Navigation, Pagination, Scrollbar, A11y } from 'swiper';
-import { Swiper, SwiperSlide } from 'swiper/react';
-
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import 'swiper/css/scrollbar';
 import styles from "./index.module.css";
+import { Swiper, SwiperSlide } from "swiper/react";
+import SwiperCore, {
+  Navigation, Pagination, Virtual 
+} from "swiper/core";
+import "swiper/swiper-bundle.css";
+
+SwiperCore.use([Navigation, Pagination, Virtual]);
 
 export default function Home() {
   const [storyPrompt, setStoryPrompt] = useState("");
   const [result, setResult] = useState();
   const [story, setStory] = useState();
   const [loadingMessage, setLoadingMessage] = useState();
+  const [pages, setPages] = useState([]);
   const loadingURL= "https://openai-labs-public-images-prod.azureedge.net/user-xgOH8FUugNBrOHlG6898OQEe/generations/generation-Aay0x7H5jn4OtSTZ7kSHGbhn/image.png"
 
   async function onSubmit(event) {
+    const isDebug=false;
     setLoadingMessage("Just a second! Getting Creative!");
+    setPages([]);
     event.preventDefault();
     try {
+      var story = {};
       
-      
-      //const response = await fetch("/api/generate", {
-      //  method: "POST",
-      //  headers: {
-      //    "Content-Type": "application/json",
-      //  },
-      //  body: JSON.stringify({ storyPrompt: storyPrompt }),
-      //});
-
-      //const data = await response.json();
-      //if (response.status !== 200) {
-      //  throw data.error || new Error(`Request failed with status ${response.status}`);
-      //}
-      //console.error(data.result);
-      const story = {
-        story_name: "The Test",
-        cover_art_prompt: "A young girl with curly...",
-        pages: [
+      if (isDebug){
+        story = {
+          story_name: "The Test",
+          cover_art_prompt: "A young girl with curly...",
+          pages: [
           {
             page_text: "Lily sat nervously at her desk, staring at the blank test in front of her",
             page_art_prompt: "Lily sitting at her dest with a wordied.."
@@ -49,8 +39,24 @@ export default function Home() {
             page_art_prompt: "Lily sitting at her dest with a wordied.."
           }
         ]
+      };
+      var image = "https://openai-labs-public-images-prod.azureedge.net/user-xgOH8FUugNBrOHlG6898OQEe/generations/generation-Aay0x7H5jn4OtSTZ7kSHGbhn/image.png";
+     }else {
+        const response = await fetch("/api/generate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ storyPrompt: storyPrompt }),
+        });
+
+        const data = await response.json();
+        if (response.status !== 200) {
+          throw data.error || new Error(`Request failed with status ${response.status}`);
+        }
+        console.error(data.result);
+        story = await JSON.parse(data.result);
       }
-      //const story = await JSON.parse(data.result);
       console.error(story); 
       console.error(story.story_name);
       var cover_prompt=story.cover_art_prompt;
@@ -60,28 +66,41 @@ export default function Home() {
       setStory(story);
       setStoryPrompt("");
       
-      //var style="storybook";
       console.error("Getting Cover Art!")
-      var image = "https://oaidalleapiprodscus.blob.core.windows.net/private/org-MUVFDrasI9rc9YyVWj0irnzo/user-xgOH8FUugNBrOHlG6898OQEe/img-67gUTkVnJDZxTmstgLk8Lu5J.png?st=2023-05-30T11%3A52%3A51Z&se=2023-05-30T13%3A52%3A51Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2023-05-30T07%3A37%3A37Z&ske=2023-05-31T07%3A37%3A37Z&sks=b&skv=2021-08-06&sig=TODJnUcRBE4aEPZgBM7iOy8CXBLLjiD0CqCeAHvX1uM%3D";
-      //var coverURL = await requestImage(cover_prompt + "Illustration Style: "+style);
+      
+      if (!isDebug) image = await requestImage(cover_prompt + "Illustration Style: "+style);
       var coverURL = image;
-      console.error(story.cover_art_prompt+"Illustration Style: "+style);
       story.cover_url = coverURL;
       setStory(story);
       setLoadingMessage(null);
+      const slides = [];
+      
+      slides.push(
+        <SwiperSlide>
+			<div>
+			  {story && story.cover_url && (<img src={story.cover_url} style={{ width: '100%' }}></img>)}
+			</div>
+        	<div className={styles.result}>{story.story_name}</div>
+		</SwiperSlide>
+      );
      
       if (story && story.pages) {
         for (let i = 0; i < story.pages.length; i++) {
           const currentPage = story.pages[i];
           console.error(currentPage.page_art_prompt+"Illustration Style: "+style);
-          //const image= await requestImage(currentPage.page_art_prompt+"Illustration Style: "+style)
+          if (!isDebug) image= await requestImage(currentPage.page_art_prompt+"Illustration Style: "+style)
           // Do something with currentPage
-          story.pages[i].page_url = image;
-          setStory(story);
+          currentPage.page_url = image;
+          slides.push(
+            <SwiperSlide>
+				<div>{currentPage.page_url && (<img src={currentPage.page_url} style={{ width: '100%' }}></img>)}</div>
+				<div>{currentPage.page_text}</div>
+			</SwiperSlide>
+          );
         }
-      } 
-      setLoadingMessage("");
+      }
       setLoadingMessage(null);
+      setPages(slides);
       console.error(story); 
       
     } catch(error) {
@@ -141,21 +160,13 @@ export default function Home() {
         {!!loadingMessage && (<img src="https://openai-labs-public-images-prod.azureedge.net/user-xgOH8FUugNBrOHlG6898OQEe/generations/generation-Aay0x7H5jn4OtSTZ7kSHGbhn/image.png" style={{ width: '100%' }}></img>)}
 		
 		<swiper
-			modules={[Navigation, Pagination, Scrollbar, A11y]}
+		    id="swiper"
+		    virtual
 			navigation
+			pagination
+			slidesPerView={1}
 		>
-			<SwiperSlide>
-				<div>
-					{story && story.cover_url && (<img src={story.cover_url} style={{ width: '100%' }}></img>)}
-				</div>
-        		<div className={styles.result}>{result}</div>
-			</SwiperSlide>
-        {story && story.pages.map((value,index)=>
-        	<SwiperSlide>
-				<div>{value.page_url && (<img src={value.page_url} style={{ width: '100%' }}></img>)}</div>
-				<div>{value.page_text}</div>
-			</SwiperSlide>
-        )}
+			{pages}
 		</swiper>
       </main>
     </div>
