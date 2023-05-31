@@ -72,7 +72,7 @@ export default function Home() {
       var coverURL = image;
       story.cover_url = coverURL;
       setStory(story);
-      setLoadingMessage(null);
+      
       const slides = [];
       
       slides.push(
@@ -102,7 +102,6 @@ export default function Home() {
       setLoadingMessage(null);
       setPages(slides);
       console.error(story); 
-      
     } catch(error) {
       // Consider implementing your own error handling logic here
       console.error(error);
@@ -159,15 +158,16 @@ export default function Home() {
         </form>
         {!!loadingMessage && (<img src="https://openai-labs-public-images-prod.azureedge.net/user-xgOH8FUugNBrOHlG6898OQEe/generations/generation-Aay0x7H5jn4OtSTZ7kSHGbhn/image.png" style={{ width: '100%' }}></img>)}
 		
-		<swiper
+		<Swiper
 		    id="swiper"
 		    virtual
 			navigation
 			pagination
 			slidesPerView={1}
+      style={{ width: '100%' }}
 		>
 			{pages}
-		</swiper>
+		</Swiper>
       </main>
     </div>
   );
